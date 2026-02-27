@@ -49,10 +49,25 @@ dependencies:
 
   # 窗口管理器：用来控制程序窗口的行为
   window_manager: ^0.4.3
+
+  # 图标生成器：用来自动生成不同平台的图标
+  flutter_launcher_icons: ^0.13.1 # 这里只写插件名和版本
   
   # 本地化支持：让你的程序能在不同语言环境下正常运行
   flutter_localizations:
     sdk: flutter
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon/appIcon.png"
+  windows:
+    generate: true
+    image_path: "assets/icon/appIcon.png"
+  linux:
+    generate: true
+    image_path: "assets/icon/appIcon.png"
+
 
 dev_dependencies:
   flutter_test:
@@ -77,8 +92,8 @@ flutter:
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
-  # assets:
-  #   - images/a_dot_burr.jpeg
+  assets:
+    - assets/icon/appIcon.png
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
