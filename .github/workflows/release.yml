@@ -1,0 +1,63 @@
+name: BuildKylinAppImage
+
+on:
+  push:
+    branches: [ "master", "main" ]
+
+jobs:
+  buildLinux:
+    # 注释：保持 20.04 运行环境，确保 glibc 兼容低版本麒麟系统
+    runs-on: ubuntu-20.04 
+    
+    steps:
+      - name: checkoutCode
+        uses: actions/checkout@v4
+
+      - name: setupFlutter
+        uses: subosito/flutter-action@v2
+        with:
+          # 注释：如果 3.41.2 无法直接通过 version 匹配，请使用 master 分支
+          flutter-version: '3.41.2' 
+          channel: 'master' 
+          cache: true
+
+      - name: installDependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libblkid-dev liblzma-dev libgcrypt20-dev libfuse2
+          # 注释：下载 appimagetool 核心组件
+          sudo wget -O /usr/local/bin/appimagetool https://github.com/AppImage/AppImageKit/releases/download/13/appimagetool-x86_64.AppImage
+          sudo chmod +x /usr/local/bin/appimagetool
+
+      - name: buildProject
+        run: |
+          flutter config --enable-linux-desktop
+          flutter pub get
+          # 注释：生成 Linux 架构下的 Release 二进制文件
+          flutter build linux --release
+
+      - name: packageAppImage
+        run: |
+          export appName="get_file_name_assistant"
+          export buildPath="build/linux/x64/release/bundle"
+          export appDir="build/linux/x64/release/AppDir"
+          
+          mkdir -p $appDir
+          cp -r $buildPath/* $appDir/
+          
+          # 创建图标及 Desktop 入口
+          cp assets/icon/appIcon.png $appDir/appIcon.png
+          echo -e "[Desktop Entry]\nName=FileAssistant\nExec=$appName\nIcon=appIcon\nType=Application\nCategories=Utility;" > $appDir/default.desktop
+          
+          # 创建 AppRun 引导脚本
+          echo -e "#!/bin/sh\nHERE=\"\$(dirname \"\$(readlink -f \"\${0}\")\")\"\nexec \"\$HERE/\$appName\" \"\$@\"" > $appDir/AppRun
+          chmod +x $appDir/AppRun
+          
+          # 注释：提取并运行模式，绕过 Actions 环境对 FUSE 的限制
+          ARCH=x86_64 /usr/local/bin/appimagetool --appimage-extract-and-run $appDir $appName-Kylin.AppImage
+
+      - name: uploadArtifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kylinAppImage
+          path: ./*.AppImage
