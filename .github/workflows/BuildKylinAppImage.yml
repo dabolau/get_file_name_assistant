@@ -1,0 +1,85 @@
+name: BuildKylinAppImage
+
+on:
+  push:
+    branches: ["master"]
+
+jobs:
+  buildLinux:
+    runs-on: ubuntu-20.04 # 关键：glibc 2.31，完美兼容麒麟V10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.16.9
+          channel: stable
+          cache: true
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libgtk-3-dev \
+            libblkid-dev \
+            liblzma-dev \
+            libgcrypt20-dev \
+            libfuse2 \
+            build-essential \
+            cmake \
+            ninja-build \
+            pkg-config
+
+      - name: Install appimagetool
+        run: |
+          wget -O appimagetool https://github.com/AppImage/AppImageKit/releases/download/13/appimagetool-x86_64.AppImage
+          chmod +x appimagetool
+          sudo mv appimagetool /usr/local/bin/
+
+      - name: Build Flutter Linux release
+        run: |
+          flutter config --enable-linux-desktop
+          flutter pub get
+          flutter build linux --release
+
+      - name: Package AppImage (兼容麒麟)
+        run: |
+          APP_NAME="get_file_name_assistant"
+          BUILD_PATH="build/linux/x64/release/bundle"
+          APP_DIR="$APP_NAME.AppDir"
+
+          # 创建目录
+          mkdir -p $APP_DIR/usr/bin
+          mkdir -p $APP_DIR/usr/share/icons/hicolor/256x256/apps/
+
+          # 复制 Flutter 构建产物
+          cp -r $BUILD_PATH/* $APP_DIR/usr/bin/
+
+          # 复制图标（确保你的图标路径正确）
+          cp assets/icon/appIcon.png $APP_DIR/usr/share/icons/hicolor/256x256/apps/$APP_NAME.png
+
+          # 生成 .desktop 文件
+          cat > $APP_DIR/$APP_NAME.desktop << EOF
+          [Desktop Entry]
+          Name=FileAssistant
+          Exec=$APP_NAME
+          Icon=$APP_NAME
+          Type=Application
+          Categories=Utility;
+          Comment=Get File Name Assistant
+          EOF
+
+          # 软链接 AppRun
+          ln -s usr/bin/$APP_NAME $APP_DIR/AppRun
+
+          # 打包（关键：--appimage-extract-and-run 解决 Actions 无 FUSE 问题）
+          ARCH=x86_64 appimagetool --appimage-extract-and-run $APP_DIR $APP_NAME-Kylin-x86_64.AppImage
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Kylin-AppImage
+          path: ./*.AppImage
