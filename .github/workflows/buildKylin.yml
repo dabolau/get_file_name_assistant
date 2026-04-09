@@ -6,7 +6,7 @@ on:
 
 jobs:
   buildLinux:
-    runs-on: ubuntu-20.04 # 关键：glibc 2.31，完美兼容麒麟V10
+    runs-on: ubuntu-20.04
 
     steps:
       - name: Checkout code
@@ -81,5 +81,5 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Kylin-AppImage
+          name: KylinAppImage
           path: ./*.AppImage

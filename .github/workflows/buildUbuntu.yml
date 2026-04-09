@@ -1,4 +1,4 @@
-name: BuildUbuntuApp
+name: BuildUbuntu
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
 
 jobs:
   buildUbuntu:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     timeout-minutes: 60
 
     steps:
@@ -20,7 +20,6 @@ jobs:
           flutter-version: 3.41.6
           channel: stable
           cache: true
-          cache-dependency-path: pubspec.lock
 
       - name: Install system dependencies
         run: |
@@ -47,6 +46,6 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Ubuntu-App
+          name: UbuntuApp
           path: build/linux/x64/release/bundle/
           retention-days: 30
