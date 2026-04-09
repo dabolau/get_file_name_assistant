@@ -39,7 +39,8 @@ jobs:
             build-essential \
             cmake \
             ninja-build \
-            pkg-config
+            pkg-config \
+            jq
 
       - name: Enable Linux desktop
         run: flutter config --enable-linux-desktop
