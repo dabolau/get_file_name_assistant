@@ -1,25 +1,24 @@
-name: BuildKylinAppImage
+name: BuildKylin
 
 on:
   workflow_dispatch:
 
 jobs:
-  buildLinux:
+  buildKylin:
     runs-on: ubuntu-latest
-
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     concurrency:
       group: build-kylin
       cancel-in-progress: false
 
-    container:
-      image: ubuntu:20.04
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -30,62 +29,29 @@ jobs:
 
       - name: Install system dependencies
         run: |
-          apt-get update
-          apt-get install -y \
+          sudo apt-get update
+          sudo apt-get install -y \
             libgtk-3-dev \
             libblkid-dev \
             liblzma-dev \
             libgcrypt20-dev \
-            libfuse2 \
             build-essential \
             cmake \
             ninja-build \
-            pkg-config \
-            wget \
-            curl \
-            jq \
-            fuse
+            pkg-config
 
-      - name: Install appimagetool
-        run: |
-          wget -O appimagetool https://github.com/AppImage/AppImageKit/releases/download/13/appimagetool-x86_64.AppImage
-          chmod +x appimagetool
-          mv appimagetool /usr/local/bin/
+      - name: Enable Linux desktop
+        run: flutter config --enable-linux-desktop
+
+      - name: Get dependencies
+        run: flutter pub get
 
       - name: Build Flutter Linux release
-        run: |
-          flutter config --enable-linux-desktop
-          flutter pub get
-          flutter build linux --release
-
-      - name: Package AppImage (兼容麒麟)
-        run: |
-          APP_NAME="get_file_name_assistant"
-          BUILD_PATH="build/linux/x64/release/bundle"
-          APP_DIR="$APP_NAME.AppDir"
-
-          mkdir -p $APP_DIR/usr/bin
-          mkdir -p $APP_DIR/usr/share/icons/hicolor/256x256/apps/
-
-          cp -r $BUILD_PATH/* $APP_DIR/usr/bin/
-          cp assets/icon/appIcon.png $APP_DIR/usr/share/icons/hicolor/256x256/apps/$APP_NAME.png
-
-          cat > $APP_DIR/$APP_NAME.desktop << EOF
-          [Desktop Entry]
-          Name=FileAssistant
-          Exec=$APP_NAME
-          Icon=$APP_NAME
-          Type=Application
-          Categories=Utility;
-          Comment=Get File Name Assistant
-          EOF
-
-          ln -s usr/bin/$APP_NAME $APP_DIR/AppRun
-
-          ARCH=x86_64 appimagetool --appimage-extract-and-run $APP_DIR $APP_NAME-Kylin-x86_64.AppImage
+        run: flutter build linux --release
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v4
         with:
-          name: KylinAppImage
-          path: ./*.AppImage
+          name: KylinApp
+          path: build/linux/x64/release/bundle/
+          retention-days: 30

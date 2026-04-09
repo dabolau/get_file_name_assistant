@@ -7,12 +7,14 @@ jobs:
   buildWindows:
     runs-on: windows-latest
 
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -31,7 +33,7 @@ jobs:
         run: flutter build windows --release
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v4
         with:
           name: WindowsApp
           path: build/windows/x64/runner/Release/
