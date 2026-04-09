@@ -21,8 +21,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
-      - name: Install jq and curl
-        run: apt-get update && apt-get install -y jq curl
+      - name: Install jq and curl and xz
+        run: apt-get update && apt-get install -y jq curl xz
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
