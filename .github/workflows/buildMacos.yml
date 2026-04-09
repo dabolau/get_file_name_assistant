@@ -35,7 +35,7 @@ jobs:
           ls -la
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: MacosApp
           path: build/macos/Build/Products/Release/get_file_name_assistant.app.zip

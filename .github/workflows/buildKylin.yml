@@ -42,6 +42,8 @@ jobs:
             ninja-build \
             pkg-config \
             wget \
+            curl \
+            jq \
             fuse
 
       - name: Install appimagetool
@@ -83,7 +85,7 @@ jobs:
           ARCH=x86_64 appimagetool --appimage-extract-and-run $APP_DIR $APP_NAME-Kylin-x86_64.AppImage
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: KylinAppImage
           path: ./*.AppImage

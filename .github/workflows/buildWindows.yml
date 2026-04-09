@@ -31,7 +31,7 @@ jobs:
         run: flutter build windows --release
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: WindowsApp
           path: build/windows/x64/runner/Release/
