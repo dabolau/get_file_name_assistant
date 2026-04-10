@@ -23,8 +23,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
-      - name: Install jq and curl and xz-utils
-        run: export DEBIAN_FRONTEND=noninteractive && apt-get update && apt-get install -y jq curl xz-utils
+      - name: Install git and jq and curl and xz-utils
+        run: export DEBIAN_FRONTEND=noninteractive && apt-get update && apt-get install -y git jq curl xz-utils
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
