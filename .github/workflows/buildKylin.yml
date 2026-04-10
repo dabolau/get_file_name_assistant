@@ -12,7 +12,7 @@ jobs:
       cancel-in-progress: false
 
     container:
-      image: ubuntu:24.04
+      image: ubuntu:20.04
 
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -74,15 +74,42 @@ jobs:
           find build/linux/x64/release/bundle -name "get_file_name_assistant" -exec patchelf --replace-needed /lib64/libc.so.6 libc.so.6 {} \; 2>/dev/null || true
           find build/linux/x64/release/bundle -name "get_file_name_assistant" -exec patchelf --replace-needed /lib64/ld-linux-x86-64.so.2 ld-linux-x86-64.so.2 {} \; 2>/dev/null || true
 
-      - name: Copy additional libraries for Kylin
+      - name: Copy all required libraries for Kylin
         run: |
-          # Install libgl1-mesa-glx to get libGLESv2.so.2
-          apt-get install -y libgl1-mesa-glx
-          # Copy libGLESv2.so.2 and other required libraries to bundle
+          # Install additional libs
+          export DEBIAN_FRONTEND=noninteractive
+          apt-get install -y libgl1-mesa-glx libglx-mesa0 libglx0 libegl1-mesa libosmesa6
+            
+          # Set rpath to use bundled libs
+          patchelf --set-rpath '$ORIGIN/lib' build/linux/x64/release/bundle/get_file_name_assistant
+          find build/linux/x64/release/bundle/lib -name "*.so" -exec patchelf --set-rpath '$ORIGIN' {} \; 2>/dev/null || true
+            
+          # Copy Mesa OpenGL libraries
+          cp -n /usr/lib/x86_64-linux-gnu/libGL.so.1 build/linux/x64/release/bundle/lib/ 2>/dev/null || true
+          cp -n /usr/lib/x86_64-linux-gnu/libGL.so.1.0.0 build/linux/x64/release/bundle/lib/ 2>/dev/null || true
           cp -n /usr/lib/x86_64-linux-gnu/libGLESv2.so.2 build/linux/x64/release/bundle/lib/ 2>/dev/null || true
           cp -n /usr/lib/x86_64-linux-gnu/libGLX_mesa.so.0 build/linux/x64/release/bundle/lib/ 2>/dev/null || true
           cp -n /usr/lib/x86_64-linux-gnu/libEGL.so.1 build/linux/x64/release/bundle/lib/ 2>/dev/null || true
-          cp -n /usr/lib/x86_64-linux-gnu/dri/i965_dri.so build/linux/x64/release/bundle/lib/ 2>/dev/null || true
+          cp -n /usr/lib/x86_64-linux-gnu/libOSMesa.so.32 build/linux/x64/release/bundle/lib/ 2>/dev/null || true
+          cp -n /usr/lib/x86_64-linux-gnu/libdrm.so.2 build/linux/x64/release/bundle/lib/ 2>/dev/null || true
+          cp -n /usr/lib/x86_64-linux-gnu/libdrm.so.2.0.0 build/linux/x64/release/bundle/lib/ 2>/dev/null || true
+          cp -n /usr/lib/x86_64-linux-gnu/libdrm_intel.so.1 build/linux/x64/release/bundle/lib/ 2>/dev/null || true
+          cp -n /usr/lib/x86_64-linux-gnu/libgallium.so.1 build/linux/x64/release/bundle/lib/ 2>/dev/null || true
+          cp -n /usr/lib/x86_64-linux-gnu/libwayland-client.so.0 build/linux/x64/release/bundle/lib/ 2>/dev/null || true
+          cp -n /usr/lib/x86_64-linux-gnu/libwayland-egl.so.1 build/linux/x64/release/bundle/lib/ 2>/dev/null || true
+          cp -n /usr/lib/x86_64-linux-gnu/libx11.so.6 build/linux/x64/release/bundle/lib/ 2>/dev/null || true
+          cp -n /usr/lib/x86_64-linux-gnu/libxext.so.6 build/linux/x64/release/bundle/lib/ 2>/dev/null || true
+          cp -n /usr/lib/x86_64-linux-gnu/libxfixes.so.3 build/linux/x64/release/bundle/lib/ 2>/dev/null || true
+          cp -n /usr/lib/x86_64-linux-gnu/libxi.so.6 build/linux/x64/release/bundle/lib/ 2>/dev/null || true
+          cp -n /usr/lib/x86_64-linux-gnu/libxkbcommon.so.0 build/linux/x64/release/bundle/lib/ 2>/dev/null || true
+          cp -n /usr/lib/x86_64-linux-gnu/libxkbcommon-x11.so.0 build/linux/x64/release/bundle/lib/ 2>/dev/null || true
+          cp -n /usr/lib/x86_64-linux-gnu/libxcb.so.1 build/linux/x64/release/bundle/lib/ 2>/dev/null || true
+          cp -n /usr/lib/x86_64-linux-gnu/libxcb-glx.so.0 build/linux/x64/release/bundle/lib/ 2>/dev/null || true
+          cp -n /usr/lib/x86_64-linux-gnu/libxcb-xfixes.so.0 build/linux/x64/release/bundle/lib/ 2>/dev/null || true
+            
+          # Copy DRI drivers
+          mkdir -p build/linux/x64/release/bundle/lib/dri
+          cp -n /usr/lib/x86_64-linux-gnu/dri/* build/linux/x64/release/bundle/lib/dri/ 2>/dev/null || true
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
