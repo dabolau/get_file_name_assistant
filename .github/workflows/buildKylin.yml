@@ -51,6 +51,12 @@ jobs:
             liblzma-dev \
             libgcrypt20-dev \
             libstdc++-10-dev \
+            libgl1-mesa-glx \
+            libgl1-mesa-dev \
+            libegl1-mesa-dev \
+            libgles2-mesa-dev \
+            libatspi2-dev \
+            libcanberra-gtk-module \
             patchelf
 
       - name: Enable Linux desktop
@@ -68,6 +74,16 @@ jobs:
           find build/linux/x64/release/bundle -name "*.so" -exec patchelf --replace-needed /lib64/libc.so.6 libc.so.6 {} \; 2>/dev/null || true
           find build/linux/x64/release/bundle -name "get_file_name_assistant" -exec patchelf --replace-needed /lib64/libc.so.6 libc.so.6 {} \; 2>/dev/null || true
           find build/linux/x64/release/bundle -name "get_file_name_assistant" -exec patchelf --replace-needed /lib64/ld-linux-x86-64.so.2 ld-linux-x86-64.so.2 {} \; 2>/dev/null || true
+
+      - name: Copy additional libraries for Kylin
+        run: |
+          # Install libgl1-mesa-glx to get libGLESv2.so.2
+          apt-get install -y libgl1-mesa-glx
+          # Copy libGLESv2.so.2 and other required libraries to bundle
+          cp -n /usr/lib/x86_64-linux-gnu/libGLESv2.so.2 build/linux/x64/release/bundle/lib/ 2>/dev/null || true
+          cp -n /usr/lib/x86_64-linux-gnu/libGLX_mesa.so.0 build/linux/x64/release/bundle/lib/ 2>/dev/null || true
+          cp -n /usr/lib/x86_64-linux-gnu/libEGL.so.1 build/linux/x64/release/bundle/lib/ 2>/dev/null || true
+          cp -n /usr/lib/x86_64-linux-gnu/dri/i965_dri.so build/linux/x64/release/bundle/lib/ 2>/dev/null || true
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
