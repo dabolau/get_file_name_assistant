@@ -55,7 +55,6 @@ jobs:
             libgl1-mesa-dev \
             libegl1-mesa-dev \
             libgles2-mesa-dev \
-            libatspi2-dev \
             libcanberra-gtk-module \
             patchelf
 
