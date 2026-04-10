@@ -54,6 +54,15 @@ jobs:
       - name: Build Flutter Linux release
         run: flutter build linux --release
 
+      - name: Fix library paths for Kylin/Ubuntu 24.04
+        run: |
+          # Install patchelf
+          apt-get install -y patchelf
+          # Fix hardcoded /lib64 paths that don't exist on newer systems
+          find build/linux/x64/release/bundle -name "*.so" -exec patchelf --replace-needed /lib64/libc.so.6 libc.so.6 {} \; 2>/dev/null || true
+          find build/linux/x64/release/bundle -name "get_file_name_assistant" -exec patchelf --replace-needed /lib64/libc.so.6 libc.so.6 {} \; 2>/dev/null || true
+          find build/linux/x64/release/bundle -name "get_file_name_assistant" -exec patchelf --replace-needed /lib64/ld-linux-x86-64.so.2 ld-linux-x86-64.so.2 {} \; 2>/dev/null || true
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
