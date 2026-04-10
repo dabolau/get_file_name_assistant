@@ -33,6 +33,9 @@ jobs:
           channel: stable
           cache: true
 
+      - name: Fix git safe directory
+        run: git config --global --add safe.directory '*'
+
       - name: Install system dependencies
         run: |
           export DEBIAN_FRONTEND=noninteractive
