@@ -16,13 +16,15 @@ jobs:
 
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+      DEBIAN_FRONTEND: noninteractive
+      TZ: UTC
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
 
       - name: Install jq and curl and xz-utils
-        run: apt-get update && apt-get install -y jq curl xz-utils
+        run: export DEBIAN_FRONTEND=noninteractive && apt-get update && apt-get install -y jq curl xz-utils
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -33,6 +35,8 @@ jobs:
 
       - name: Install system dependencies
         run: |
+          export DEBIAN_FRONTEND=noninteractive
+          export TZ=UTC
           apt-get update
           apt-get install -y \
             libgtk-3-dev \
@@ -43,7 +47,8 @@ jobs:
             cmake \
             ninja-build \
             pkg-config \
-            jq
+            jq \
+            patchelf
 
       - name: Enable Linux desktop
         run: flutter config --enable-linux-desktop
@@ -56,8 +61,6 @@ jobs:
 
       - name: Fix library paths for Kylin/Ubuntu 24.04
         run: |
-          # Install patchelf
-          apt-get install -y patchelf
           # Fix hardcoded /lib64 paths that don't exist on newer systems
           find build/linux/x64/release/bundle -name "*.so" -exec patchelf --replace-needed /lib64/libc.so.6 libc.so.6 {} \; 2>/dev/null || true
           find build/linux/x64/release/bundle -name "get_file_name_assistant" -exec patchelf --replace-needed /lib64/libc.so.6 libc.so.6 {} \; 2>/dev/null || true
